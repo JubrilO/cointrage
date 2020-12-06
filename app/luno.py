@@ -81,12 +81,12 @@ class Luno(Base):
         return self.get_account_via_balances(account_name)
 
     def sell_as_taker(self, amount):
-        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=2276834457822089635, base_volume=amount)
+        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=amount)
         # todo: store the order id in an order table
         return resp
 
     def buy_as_taker(self, amount):
-        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=7089454428761806057, counter_volume=amount)
+        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=amount)
         # todo: store the order id in an order table
         return resp
 
