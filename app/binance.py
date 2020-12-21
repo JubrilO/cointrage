@@ -26,11 +26,6 @@ class Binance(Base):
     btc_locked = db.Column(db.String, default='0.0')
 
     def get_account(self):
-        account = session.query(Binance).filter(Binance.name == ACCOUNT_NAME).first()
-        if not account:
-            data = self.get_account_from_binance()
-
-    def get_account_from_binance(self):
         self.cached_ngn_account = {}
         self.cached_btc_account = {}
         if not (self.cached_ngn_account or self.cached_btc_account):
@@ -44,10 +39,19 @@ class Binance(Base):
                 
                 self.cached_ngn_account = ngn_balance[0]
                 self.cached_btc_account = btc_balance[0]
+                account = Binance(
+                    ngn_balance=self.cached_ngn_account['free'],
+                    btc_balance=self.cached_btc_account['free'],
+                    ngn_locked=self.cached_ngn_account['locked'],
+                    btc_locked=self.cached_btc_account['locked'],
+                )
+                session.add(account)
+                session.commit()
+
         # return self.cached_account
 
     def refresh_account(self):
-        return self.get_account_from_binance()
+        return self.get_account()
 
     def sell_as_taker(self, quantity):
         resp = c.order_market_sell(
@@ -74,5 +78,4 @@ class Binance(Base):
         }
 
     def run(self):
-        binance_account = self.get_account()
-        # pprint(self.buy_as_taker(0.1))
+        self.get_account()
