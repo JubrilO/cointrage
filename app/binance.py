@@ -33,7 +33,6 @@ class Binance(Base):
             if resp and resp.get('balances'):
                 balances = resp['balances']
                 binance_accounts = [balance for balance in balances if balance and balance.get('asset') in ['NGN', 'BTC']]
-                pprint(binance_accounts)
                 ngn_balance = [balance for balance in binance_accounts if balance.get('asset') == 'NGN']
                 btc_balance = [balance for balance in binance_accounts if balance.get('asset') == 'BTC']
                 
@@ -47,8 +46,6 @@ class Binance(Base):
                 )
                 session.add(account)
                 session.commit()
-
-        # return self.cached_account
 
     def refresh_account(self):
         return self.get_account()
@@ -64,9 +61,6 @@ class Binance(Base):
             symbol='BTCNGN',
             quantity=quantity)
         return resp
-
-    # def get_order(self, order_id):
-    #     return c.get_order(order_id)
     
     def to_dict(self):
         return {
