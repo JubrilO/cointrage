@@ -96,6 +96,9 @@ class Luno(Base):
     def get_ticker(self):
         return c.get_ticker('XBTNGN')
 
+    def get_trade_fee(self):
+        return c.get_fee_info('XBTNGN')
+
     def to_dict(self):
         return {
             'id': self.id,

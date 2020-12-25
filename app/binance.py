@@ -61,6 +61,15 @@ class Binance(Base):
             symbol='BTCNGN',
             quantity=quantity)
         return resp
+
+    def get_avg_price(self):
+        return c.get_avg_price(symbol='BTCNGN')
+    
+    def get_ticker(self):
+        return c.get_ticker(symbol='BTCNGN')
+    
+    def get_trade_fee(self):
+        return c.get_trade_fee(symbol='BTCNGN')
     
     def to_dict(self):
         return {
