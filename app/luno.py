@@ -73,8 +73,8 @@ class Luno(Base):
             resp = c.get_balances()
             if resp and resp.get('balance'):
                 accounts = resp['balance']
-                account = [account for account in accounts if account and account.get('name') == account_name]
-                self.cached_account = account and account[0]
+                luno_accounts = [account for account in accounts if account and account.get('name') == account_name]
+                self.cached_account = luno_accounts and luno_accounts[0]
         return self.cached_account
 
     def refresh_account(self, account_name):
