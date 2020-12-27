@@ -17,7 +17,7 @@ class Market:
             binance_buy_price = float_this(binance_ticker['askPrice'])
             binance_buy_quantity = float_this(binance_ticker['askQty'])
 
-            binance_taker_fee = binance.get_trade_fee()['tradeFee'][0]['taker'] * binance_sell_price # I'm not so sure what price will be used to determine the exchange for the trade fee. But I went with the more expensive one for now. Will investigate this later.
+            binance_taker_fee = float_this(binance.get_trade_fee()['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno
 
             luno = Luno()
             # luno_ticker = luno.get_ticker() # implement get ticker to get the first ask and bids instead of calling luno.get_order_book directly
@@ -31,7 +31,7 @@ class Market:
             luno_sell_price = float_this(luno_bid['price'])
             luno_sell_quantity = float_this(luno_bid['volume'])
 
-            luno_taker_fee = float_this(luno.get_trade_fee()['taker_fee']) * luno_sell_price
+            luno_taker_fee = float_this(luno.get_trade_fee().get('taker_fee'))
 
             binance_profit = binance_sell_price > luno_buy_price
             luno_profit = luno_sell_price > binance_buy_price
@@ -51,9 +51,12 @@ class Market:
             if binance_profit:
                 quantity = min(binance_sell_quantity, luno_buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
                 # also create a job that routinely checks our balance and sends an email when our balance is less than a threshold. Create a mechanism for dynamically changing this value with an environment variable
-                should_execute_trade = (binance_sell_price * quantity - luno_buy_price * quantity) > (binance_taker_fee * quantity + luno_taker_fee * quantity)
+                binance_fee = binance_taker_fee * binance_sell_price
+                luno_fee = luno_taker_fee * luno_buy_price
+                total_fees = (binance_fee + luno_fee) * quantity
+                should_execute_trade = (binance_sell_price * quantity - luno_buy_price * quantity) > total_fees
                 print(f'\t\t BINANCE PROFIT: {binance_sell_price * quantity - luno_buy_price * quantity}')
-                print(f'\t\t BINANCE PROFIT FEES: {binance_taker_fee * quantity + luno_taker_fee * quantity}')
+                print(f'\t\t BINANCE PROFIT FEES: {total_fees}')
                 print(f'\t\t Will execute the trade: {should_execute_trade}')
                 if should_execute_trade:
                     # sell on binance
@@ -61,12 +64,15 @@ class Market:
                     binance.sell_as_taker(quantity)
                     # buy on luno
                     print(f'Buying on Luno - quantity: {quantity} amount in Naira: {quantity * luno_buy_price}')
-                    luno.sell_as_taker(quantity * luno_buy_price)
+                    luno.buy_as_taker(quantity * luno_buy_price)
             if luno_profit:
                 quantity = min(binance_buy_quantity, luno_sell_quantity) # perform a check here to confirm that we can afford this
-                should_execute_trade = (luno_sell_price * quantity - binance_buy_price * quantity) > (binance_taker_fee * quantity + luno_taker_fee * quantity)
+                binance_fee = binance_taker_fee * binance_buy_price
+                luno_fee = luno_taker_fee * luno_sell_price
+                total_fees = (binance_fee + luno_fee) * quantity
+                should_execute_trade = (luno_sell_price * quantity - binance_buy_price * quantity) > total_fees
                 print(f'\t\t LUNO PROFIT {luno_sell_price * quantity - binance_buy_price * quantity}')
-                print(f'\t\t LUNO PROFIT FEES: {binance_taker_fee * quantity + luno_taker_fee * quantity}')
+                print(f'\t\t LUNO PROFIT FEES: {total_fees}')
                 print(f'\t\t Will execute the trade: {should_execute_trade}')
                 if should_execute_trade:
                     # sell on luno
