@@ -81,11 +81,13 @@ class Luno(Base):
         return self.get_account_via_balances(account_name)
 
     def sell_as_taker(self, amount):
+        # if youre selling you have to quoate it in btc
         resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=amount)
         # todo: store the order id in an order table
         return resp
 
     def buy_as_taker(self, amount):
+        # if youre buying you have to quoate it in naira
         resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=amount)
         # todo: store the order id in an order table
         return resp
@@ -98,6 +100,9 @@ class Luno(Base):
 
     def get_trade_fee(self):
         return c.get_fee_info('XBTNGN')
+
+    def get_order_book(self):
+        return c.get_order_book('XBTNGN')
 
     def to_dict(self):
         return {

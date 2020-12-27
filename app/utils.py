@@ -1,4 +1,4 @@
-def floater(num):
+def float_this(num):
     try:
         return float(num)
     except:
