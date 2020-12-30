@@ -8,6 +8,7 @@ luno-python = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
 arrow = "*"
+python-binance = "*"
 
 [dev-packages]
 pylint = "*"
