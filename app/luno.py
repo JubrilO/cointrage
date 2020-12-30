@@ -139,3 +139,12 @@ class Luno(Base):
         self.buy_quantity = float_this(self.ticker['bid']['volume'])
 
         self.taker_fee = float_this(self.get_trade_fee().get('taker_fee'))
+
+    def price_info(self):
+        return {
+            'exchange': self.__tablename__,
+            'sell_price': self.sell_price,
+            'sell_quantity': self.sell_quantity,
+            'buy_price': self.buy_price,
+            'buy_quantity': self.buy_quantity,
+        }

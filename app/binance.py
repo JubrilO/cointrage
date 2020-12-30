@@ -99,3 +99,12 @@ class Binance(Base):
         self.buy_quantity = float_this(self.ticker['askQty'])
 
         self.taker_fee = float_this(self.get_trade_fee()['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno
+
+    def price_info(self):
+        return {
+            'exchange': self.__tablename__,
+            'sell_price': self.sell_price,
+            'sell_quantity': self.sell_quantity,
+            'buy_price': self.buy_price,
+            'buy_quantity': self.buy_quantity,
+        }
