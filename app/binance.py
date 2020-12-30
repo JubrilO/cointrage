@@ -4,6 +4,7 @@ from binance.client import Client
 from pprint import pprint
 import os
 from dotenv import load_dotenv, find_dotenv
+from app.utils import float_this
 
 load_dotenv(find_dotenv())
 
@@ -82,3 +83,14 @@ class Binance(Base):
 
     def run(self):
         self.get_account()
+
+    def init_exchange(self):
+        self.ticker = self.get_ticker()
+
+        self.sell_price = float_this(self.ticker['bidPrice'])
+        self.sell_quantity = float_this(self.ticker['bidQty'])
+
+        self.buy_price = float_this(self.ticker['askPrice'])
+        self.buy_quantity = float_this(self.ticker['askQty'])
+
+        self.taker_fee = float_this(self.get_trade_fee()['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno

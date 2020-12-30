@@ -5,6 +5,7 @@ from luno_python.client import Client
 from pprint import pprint
 import os
 from dotenv import load_dotenv, find_dotenv
+from app.utils import float_this
 
 load_dotenv(find_dotenv())
 
@@ -96,7 +97,11 @@ class Luno(Base):
         return c.get_order(order_id)
     
     def get_ticker(self):
-        return c.get_ticker('XBTNGN')
+        order_book = c.get_order_book('XBTNGN')
+        return {
+            'ask': order_book['asks'][0],
+            'bid': order_book['bids'][0],
+        }
 
     def get_trade_fee(self):
         return c.get_fee_info('XBTNGN')
@@ -118,3 +123,14 @@ class Luno(Base):
     def run(self):
         luno_account = self.get_account()
         print(luno_account.get_ticker())
+
+    def init_exchange(self):
+        self.ticker = self.get_ticker()
+
+        self.sell_price = float_this(self.ticker['ask']['price'])
+        self.sell_quantity = float_this(self.ticker['ask']['volume'])
+
+        self.buy_price = float_this(self.ticker['bid']['price'])
+        self.buy_quantity = float_this(self.ticker['bid']['volume'])
+
+        self.taker_fee = float_this(self.get_trade_fee().get('taker_fee'))
