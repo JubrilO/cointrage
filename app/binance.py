@@ -10,6 +10,7 @@ load_dotenv(find_dotenv())
 API_KEY_ID = os.getenv('BINANCE_API_KEY')
 API_KEY_SECRET = os.getenv('BINANCE_SECRET_KEY')
 ACCOUNT_NAME = os.getenv('ACCOUNT_NAME')
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
 c = Client(API_KEY_ID, API_KEY_SECRET)
 
@@ -51,12 +52,16 @@ class Binance(Base):
         return self.get_account()
 
     def sell_as_taker(self, quantity):
+        if ENVIRONMENT != 'production':
+            return
         resp = c.order_market_sell(
             symbol='BTCNGN',
             quantity=quantity)
         return resp
 
     def buy_as_taker(self, quantity):
+        if ENVIRONMENT != 'production':
+            return
         resp = c.order_market_buy(
             symbol='BTCNGN',
             quantity=quantity)
