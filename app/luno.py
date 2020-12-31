@@ -11,6 +11,7 @@ load_dotenv(find_dotenv())
 API_KEY_ID = os.getenv('API_KEY_ID')
 API_KEY_SECRET = os.getenv('API_KEY_SECRET')
 ACCOUNT_NAME = os.getenv('ACCOUNT_NAME')
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
 c = Client(api_key_id=API_KEY_ID, api_key_secret=API_KEY_SECRET)
 
@@ -81,12 +82,16 @@ class Luno(Base):
         return self.get_account_via_balances(account_name)
 
     def sell_as_taker(self, amount):
+        if ENVIRONMENT != 'production':
+            return
         # if youre selling you have to quoate it in btc
         resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=amount)
         # todo: store the order id in an order table
         return resp
 
     def buy_as_taker(self, amount):
+        if ENVIRONMENT != 'production':
+            return
         # if youre buying you have to quoate it in naira
         resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=amount)
         # todo: store the order id in an order table
