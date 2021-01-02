@@ -10,20 +10,10 @@ class Exchange:
         self.luno.init_exchange()
         self.binance = Binance()
         self.binance.init_exchange()
-    
-    def get_binance_profit_taker_fee(self, quantity):
-        binance_fee = self.binance.taker_fee * self.binance.sell_price
-        luno_fee = self.luno.taker_fee * self.luno.buy_price
-        return (binance_fee + luno_fee) * quantity
+        self.can_profit_on_binance = self.binance.sell_price > self.luno.buy_price
+        self.can_profit_on_luno = self.luno.sell_price > self.binance.buy_price
+        self.can_profit = self.can_profit_on_binance or self.can_profit_on_luno
 
-    def get_luno_profit_taker_fee(self, quantity):
-        binance_fee = self.binance.taker_fee * self.binance.buy_price
-        luno_fee = self.luno.taker_fee * self.luno.sell_price
-        return (binance_fee + luno_fee) * quantity
-
-    def take(self):
-        can_profit_on_binance = self.binance.sell_price > self.luno.buy_price
-        can_profit_on_luno = self.luno.sell_price > self.binance.buy_price
         '''
         We might not be able to make a profit in the scenario below
         - binance
@@ -33,40 +23,42 @@ class Exchange:
             - BUY:  12.8 million naira
             - SELL: 12.6 million naira
         '''
+
+        if self.can_profit_on_binance:
+            self.sell_exchange = self.binance
+            self.buy_exchange = self.luno
+    
+        if self.can_profit_on_luno:
+            self.sell_exchange = self.luno
+            self.buy_exchange = self.binance
+    
+    def get_trade_fee(self, quantity):
+        seller_fee = self.sell_exchange.taker_fee * self.sell_exchange.sell_price
+        buyer_fee = self.buy_exchange.taker_fee * self.buy_exchange.buy_price
+        return (seller_fee + buyer_fee) * quantity
+
+    def take(self):
         print('\n\n')
-        print(f'can_profit_on_binance - {can_profit_on_binance}')
-        print(f'can_profit_on_luno - {can_profit_on_luno}')
-        if (can_profit_on_binance and can_profit_on_luno):
+        print(f'can_profit_on_binance - {self.can_profit_on_binance}')
+        print(f'can_profit_on_luno - {self.can_profit_on_luno}')
+        if (self.can_profit_on_binance and self.can_profit_on_luno):
             print(f'luno stats - {dumps(self.luno.price_info(), indent=4)}')
             print(f'binance stats - {dumps(self.binance.price_info(), indent=4)}')
 
-        if can_profit_on_binance:
+        if self.can_profit:
             quantity = min(self.binance.sell_quantity, self.luno.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
             # also create a job that routinely checks our balance and sends an email when our balance is less than a threshold. Create a mechanism for dynamically changing this value with an environment variable
-            trade_fee = self.get_binance_profit_taker_fee(quantity)
-            should_execute_trade = ((self.binance.sell_price - self.luno.buy_price) * quantity) > trade_fee
-            print(f'\t\t BINANCE PROFIT: {(self.binance.sell_price - self.luno.buy_price) * quantity}')
-            print(f'\t\t BINANCE PROFIT FEES: {trade_fee}')
+            trade_fee = self.get_trade_fee(quantity)
+            profit = (self.sell_exchange.sell_price - self.buy_exchange.buy_price) * quantity
+            should_execute_trade = (profit) > trade_fee
+            print(f'\t\t {self.sell_exchange.name.upper()} PROFIT: {profit}')
+            print(f'\t\t {self.sell_exchange.name.upper()} TRADE FEES: {trade_fee}')
+            print(f'\t\t COINTRAGE PROFIT AFTER TRADING: {profit - trade_fee}')
             print(f'\t\t Will execute the trade: {should_execute_trade}')
             if should_execute_trade:
                 # sell on binance
-                print(f'Selling on Binance - quantity: {quantity} amount in Naira: {quantity * self.binance.sell_price}')
-                self.binance.sell_as_taker(quantity)
+                print(f'Selling on {self.sell_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.sell_exchange.sell_price}')
+                self.sell_exchange.sell_as_taker(self.sell_exchange.sell_price, quantity)
                 # buy on luno
-                print(f'Buying on Luno - quantity: {quantity} amount in Naira: {quantity * self.luno.buy_price}')
-                self.luno.buy_as_taker(quantity * self.luno.buy_price)
-        if can_profit_on_luno:
-            quantity = min(self.binance.buy_quantity, self.luno.sell_quantity) # perform a check here to confirm that we can afford this
-            trade_fee = self.get_luno_profit_taker_fee(quantity)
-
-            should_execute_trade = ((self.luno.sell_price - self.binance.buy_price) * quantity) > trade_fee
-            print(f'\t\t LUNO PROFIT {(self.luno.sell_price - self.binance.buy_price) * quantity}')
-            print(f'\t\t LUNO PROFIT FEES: {trade_fee}')
-            print(f'\t\t Will execute the trade: {should_execute_trade}')
-            if should_execute_trade:
-                # sell on luno
-                print(f'Selling on Luno - quantity: {quantity} amount in Naira: {quantity * self.luno.sell_price}')
-                self.luno.sell_as_taker(quantity * self.luno.sell_price)
-                # buy on binance
-                print(f'Buying on Binance - quantity: {quantity} amount in Naira: {quantity * self.binance.buy_price}')
-                self.binance.buy_as_taker(quantity)
+                print(f'Buying on {self.buy_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.buy_exchange.buy_price}')
+                self.buy_exchange.buy_as_taker(self.buy_exchange.buy_price, quantity)

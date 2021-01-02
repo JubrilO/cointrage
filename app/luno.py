@@ -82,19 +82,21 @@ class Luno(Base):
     def refresh_account(self, account_name):
         return self.get_account_via_balances(account_name)
 
-    def sell_as_taker(self, amount):
+    def sell_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
             return
-        # if youre selling you have to quoate it in btc
-        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=amount)
+        volume = price * quantity
+        # if youre selling you have to quote it in btc
+        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=volume)
         # todo: store the order id in an order table
         return resp
 
-    def buy_as_taker(self, amount):
+    def buy_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
             return
-        # if youre buying you have to quoate it in naira
-        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=amount)
+        volume = price * quantity
+        # if youre buying you have to quote it in naira
+        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=volume)
         # todo: store the order id in an order table
         return resp
 
@@ -130,6 +132,7 @@ class Luno(Base):
         print(luno_account.get_ticker())
 
     def init_exchange(self):
+        self.name = self.__tablename__
         self.ticker = self.get_ticker()
 
         self.sell_price = float_this(self.ticker['ask']['price'])

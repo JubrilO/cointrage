@@ -52,7 +52,8 @@ class Binance(Base):
     def refresh_account(self):
         return self.get_account()
 
-    def sell_as_taker(self, quantity):
+    def sell_as_taker(self, price, quantity):
+        del price
         if ENVIRONMENT != 'production':
             return
         resp = c.order_market_sell(
@@ -60,7 +61,8 @@ class Binance(Base):
             quantity=quantity)
         return resp
 
-    def buy_as_taker(self, quantity):
+    def buy_as_taker(self, price, quantity):
+        del price
         if ENVIRONMENT != 'production':
             return
         resp = c.order_market_buy(
@@ -90,6 +92,7 @@ class Binance(Base):
         self.get_account()
 
     def init_exchange(self):
+        self.name = self.__tablename__
         self.ticker = self.get_ticker()
 
         self.sell_price = float_this(self.ticker['bidPrice'])
