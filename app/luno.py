@@ -72,15 +72,26 @@ class Luno(Base):
     def get_account_via_balances(self, account_name):
         self.cached_account = {}
         if not self.cached_account:
-            resp = c.get_balances()
-            if resp and resp.get('balance'):
-                accounts = resp['balance']
-                luno_accounts = [account for account in accounts if account and account.get('name') == account_name]
-                self.cached_account = luno_accounts and luno_accounts[0]
+            accounts = self.get_all_accounts()
+            luno_accounts = [account for account in accounts if account and account.get('name') == account_name]
+            self.cached_account = luno_accounts and luno_accounts[0]
         return self.cached_account
 
     def refresh_account(self, account_name):
         return self.get_account_via_balances(account_name)
+
+    def get_available_naira_balance(self):
+        accounts = self.get_all_accounts()
+        naira_account = [account for account in accounts if account and account.get('asset') == 'NGN']
+        if len(naira_account):
+            return naira_account[0]['balance']
+        return 0.0
+
+    def get_all_accounts(self):
+        resp = c.get_balances()
+        if resp and resp.get('balance'):
+            return resp['balance']
+        return []        
 
     def sell_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
