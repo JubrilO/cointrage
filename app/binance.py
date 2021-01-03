@@ -101,7 +101,14 @@ class Binance(Base):
         self.buy_price = float_this(self.ticker['askPrice'])
         self.buy_quantity = float_this(self.ticker['askQty'])
 
-        self.taker_fee = float_this(self.get_trade_fee()['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno
+        taker_fee = c._request_withdraw_api('get', 'tradeFee.html', True, data={'symbol': 'BTCNGN'})
+        if not taker_fee.get('success'):
+            res = {
+                'tradeFee': [{'taker': '0.001'}],
+            }
+        else:
+            res = taker_fee
+        self.taker_fee = float_this(res['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno
 
     def price_info(self):
         return {
