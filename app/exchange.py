@@ -38,28 +38,32 @@ class Exchange:
         return (seller_fee + buyer_fee) * quantity
 
     def take(self):
-        print('\n\n')
-        print(f'can_profit_on_binance - {self.can_profit_on_binance}')
-        print(f'can_profit_on_luno - {self.can_profit_on_luno}')
-        if (self.can_profit_on_binance and self.can_profit_on_luno):
-            print(f'luno stats - {dumps(self.luno.price_info(), indent=4)}')
-            print(f'binance stats - {dumps(self.binance.price_info(), indent=4)}')
-            return
+        try:
+            print('\n\n')
+            print(f'can_profit_on_binance - {self.can_profit_on_binance}')
+            print(f'can_profit_on_luno - {self.can_profit_on_luno}')
+            if (self.can_profit_on_binance and self.can_profit_on_luno):
+                print(f'luno stats - {dumps(self.luno.price_info(), indent=4)}')
+                print(f'binance stats - {dumps(self.binance.price_info(), indent=4)}')
+                return
 
-        if self.can_profit:
-            quantity = min(self.sell_exchange.sell_quantity, self.buy_exchange.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
-            # also create a job that routinely checks our balance and sends an email when our balance is less than a threshold. Create a mechanism for dynamically changing this value with an environment variable
-            trade_fee = self.get_trade_fee(quantity)
-            profit = (self.sell_exchange.sell_price - self.buy_exchange.buy_price) * quantity
-            should_execute_trade = (profit) > trade_fee
-            print(f'\t\t {self.sell_exchange.name.upper()} PROFIT: {profit}')
-            print(f'\t\t {self.sell_exchange.name.upper()} TRADE FEES: {trade_fee}')
-            print(f'\t\t COINTRAGE PROFIT AFTER TRADING: {profit - trade_fee}')
-            print(f'\t\t Will execute the trade: {should_execute_trade}')
-            if should_execute_trade:
-                # sell on binance
-                print(f'Selling on {self.sell_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.sell_exchange.sell_price}')
-                self.sell_exchange.sell_as_taker(self.sell_exchange.sell_price, quantity)
-                # buy on luno
-                print(f'Buying on {self.buy_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.buy_exchange.buy_price}')
-                self.buy_exchange.buy_as_taker(self.buy_exchange.buy_price, quantity)
+            if self.can_profit:
+                quantity = min(self.sell_exchange.sell_quantity, self.buy_exchange.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
+                # also create a job that routinely checks our balance and sends an email when our balance is less than a threshold. Create a mechanism for dynamically changing this value with an environment variable
+                trade_fee = self.get_trade_fee(quantity)
+                profit = (self.sell_exchange.sell_price - self.buy_exchange.buy_price) * quantity
+                should_execute_trade = (profit) > trade_fee
+                print(f'\t\t {self.sell_exchange.name.upper()} PROFIT: {profit}')
+                print(f'\t\t {self.sell_exchange.name.upper()} TRADE FEES: {trade_fee}')
+                print(f'\t\t COINTRAGE PROFIT AFTER TRADING: {profit - trade_fee}')
+                print(f'\t\t Will execute the trade: {should_execute_trade}')
+                if should_execute_trade:
+                    # sell on binance
+                    print(f'Selling on {self.sell_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.sell_exchange.sell_price}')
+                    self.sell_exchange.sell_as_taker(self.sell_exchange.sell_price, quantity)
+                    # buy on luno
+                    print(f'Buying on {self.buy_exchange.name.title()} - quantity: {quantity} amount in Naira: {quantity * self.buy_exchange.buy_price}')
+                    self.buy_exchange.buy_as_taker(self.buy_exchange.buy_price, quantity)
+        except Exception as e:
+            print(e)
+            return
