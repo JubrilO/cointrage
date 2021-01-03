@@ -23,7 +23,6 @@ class Exchange:
             - BUY:  12.8 million naira
             - SELL: 12.6 million naira
         '''
-
         if self.can_profit_on_binance:
             self.sell_exchange = self.binance
             self.buy_exchange = self.luno

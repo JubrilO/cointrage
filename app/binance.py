@@ -48,6 +48,15 @@ class Binance(Base):
                 )
                 session.add(account)
                 session.commit()
+        return {
+            'available_naira_balance': self.cached_ngn_account['free'],
+            'locked_naira_balance': self.cached_ngn_account['locked'],
+            'available_btc_balance': self.cached_btc_account['free'],
+            'locked_btc_balance': self.cached_btc_account['locked'],
+        }
+    
+    def get_available_naira_balance(self):
+        return self.refresh_account()['available_naira_balance']
 
     def refresh_account(self):
         return self.get_account()
@@ -93,6 +102,7 @@ class Binance(Base):
 
     def init_exchange(self):
         self.name = self.__tablename__
+
         self.ticker = self.get_ticker()
 
         self.sell_price = float_this(self.ticker['bidPrice'])
