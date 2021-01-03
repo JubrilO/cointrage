@@ -4,6 +4,7 @@ from binance.client import Client
 from pprint import pprint
 import os
 from dotenv import load_dotenv, find_dotenv
+from app.utils import float_this
 
 load_dotenv(find_dotenv())
 
@@ -51,7 +52,8 @@ class Binance(Base):
     def refresh_account(self):
         return self.get_account()
 
-    def sell_as_taker(self, quantity):
+    def sell_as_taker(self, price, quantity):
+        del price
         if ENVIRONMENT != 'production':
             return
         resp = c.order_market_sell(
@@ -59,7 +61,8 @@ class Binance(Base):
             quantity=quantity)
         return resp
 
-    def buy_as_taker(self, quantity):
+    def buy_as_taker(self, price, quantity):
+        del price
         if ENVIRONMENT != 'production':
             return
         resp = c.order_market_buy(
@@ -87,3 +90,24 @@ class Binance(Base):
 
     def run(self):
         self.get_account()
+
+    def init_exchange(self):
+        self.name = self.__tablename__
+        self.ticker = self.get_ticker()
+
+        self.sell_price = float_this(self.ticker['bidPrice'])
+        self.sell_quantity = float_this(self.ticker['bidQty'])
+
+        self.buy_price = float_this(self.ticker['askPrice'])
+        self.buy_quantity = float_this(self.ticker['askQty'])
+
+        self.taker_fee = float_this(self.get_trade_fee()['tradeFee'][0].get('taker')) # implement a function in the banance exchange class that protects us if the wrong data format is returned from binance. Do same for Luno
+
+    def price_info(self):
+        return {
+            'exchange': self.__tablename__,
+            'sell_price': self.sell_price,
+            'sell_quantity': self.sell_quantity,
+            'buy_price': self.buy_price,
+            'buy_quantity': self.buy_quantity,
+        }

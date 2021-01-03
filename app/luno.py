@@ -5,6 +5,7 @@ from luno_python.client import Client
 from pprint import pprint
 import os
 from dotenv import load_dotenv, find_dotenv
+from app.utils import float_this
 
 load_dotenv(find_dotenv())
 
@@ -81,19 +82,21 @@ class Luno(Base):
     def refresh_account(self, account_name):
         return self.get_account_via_balances(account_name)
 
-    def sell_as_taker(self, amount):
+    def sell_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
             return
-        # if youre selling you have to quoate it in btc
-        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=amount)
+        volume = price * quantity
+        # if youre selling you have to quote it in btc
+        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=volume)
         # todo: store the order id in an order table
         return resp
 
-    def buy_as_taker(self, amount):
+    def buy_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
             return
-        # if youre buying you have to quoate it in naira
-        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=amount)
+        volume = price * quantity
+        # if youre buying you have to quote it in naira
+        resp = c.post_market_order(pair='XBTNGN', type='BUY', counter_account_id=self.account_id, counter_volume=volume)
         # todo: store the order id in an order table
         return resp
 
@@ -101,7 +104,11 @@ class Luno(Base):
         return c.get_order(order_id)
     
     def get_ticker(self):
-        return c.get_ticker('XBTNGN')
+        order_book = c.get_order_book('XBTNGN')
+        return {
+            'ask': order_book['asks'][0],
+            'bid': order_book['bids'][0],
+        }
 
     def get_trade_fee(self):
         return c.get_fee_info('XBTNGN')
@@ -123,3 +130,24 @@ class Luno(Base):
     def run(self):
         luno_account = self.get_account()
         print(luno_account.get_ticker())
+
+    def init_exchange(self):
+        self.name = self.__tablename__
+        self.ticker = self.get_ticker()
+
+        self.sell_price = float_this(self.ticker['ask']['price'])
+        self.sell_quantity = float_this(self.ticker['ask']['volume'])
+
+        self.buy_price = float_this(self.ticker['bid']['price'])
+        self.buy_quantity = float_this(self.ticker['bid']['volume'])
+
+        self.taker_fee = float_this(self.get_trade_fee().get('taker_fee'))
+
+    def price_info(self):
+        return {
+            'exchange': self.__tablename__,
+            'sell_price': self.sell_price,
+            'sell_quantity': self.sell_quantity,
+            'buy_price': self.buy_price,
+            'buy_quantity': self.buy_quantity,
+        }
