@@ -44,6 +44,7 @@ class Exchange:
         if (self.can_profit_on_binance and self.can_profit_on_luno):
             print(f'luno stats - {dumps(self.luno.price_info(), indent=4)}')
             print(f'binance stats - {dumps(self.binance.price_info(), indent=4)}')
+            return
 
         if self.can_profit:
             quantity = min(self.binance.sell_quantity, self.luno.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
