@@ -85,9 +85,9 @@ class Luno(Base):
     def sell_as_taker(self, price, quantity):
         if ENVIRONMENT != 'production':
             return
-        volume = price * quantity
+        del price
         # if youre selling you have to quote it in btc
-        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=volume)
+        resp = c.post_market_order(pair='XBTNGN', type='SELL', base_account_id=self.account_id, base_volume=quantity)
         # todo: store the order id in an order table
         return resp
 
