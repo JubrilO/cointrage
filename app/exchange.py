@@ -47,7 +47,7 @@ class Exchange:
             return
 
         if self.can_profit:
-            quantity = min(self.binance.sell_quantity, self.luno.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
+            quantity = min(self.sell_exchange.sell_quantity, self.buy_exchange.buy_quantity) # perform a check here to confirm that we can afford this and then skip.... 
             # also create a job that routinely checks our balance and sends an email when our balance is less than a threshold. Create a mechanism for dynamically changing this value with an environment variable
             trade_fee = self.get_trade_fee(quantity)
             profit = (self.sell_exchange.sell_price - self.buy_exchange.buy_price) * quantity
