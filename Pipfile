@@ -9,7 +9,6 @@ sqlalchemy = "*"
 python-dotenv = "*"
 arrow = "*"
 python-binance = "*"
-sqlalchemy-utils = "*"
 
 [dev-packages]
 pylint = "*"
