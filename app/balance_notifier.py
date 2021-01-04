@@ -7,7 +7,7 @@ import os
 from time import time
 
 from dotenv import find_dotenv, load_dotenv
-from redis import Redis
+from redis import from_url
 
 from app.binance import Binance
 from app.luno import Luno
@@ -16,7 +16,7 @@ from app.utils import float_this, send_email
 load_dotenv(find_dotenv())
 BALANCE_THRESHOLD = float_this(os.getenv('BALANCE_THRESHOLD'))
 
-redis = Redis()
+redis = from_url(os.getenv('REDIS_URL'))
 
 class TradingBalanceChecker:
 
