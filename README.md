@@ -1,2 +1,2 @@
 # cointrage
-A simple bot that acts as an Arbitrager BTC across Luno, Binance, and Buycoins
+A simple bot that acts as a BTC Arbitrager across Luno, Binance, and Buycoins
